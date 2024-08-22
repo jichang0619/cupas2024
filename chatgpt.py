@@ -2,10 +2,12 @@
 
 import os
 from openai import OpenAI
+from dotenv import load_dotenv
 
+load_dotenv()
+API_KEY = os.getenv('API_KEY')
 
-
-client = OpenAI(api_key=Project_API_KEY)
+client = OpenAI(api_key=API_KEY)
 
 def chat_with_gpt(prompt, model="gpt-4o", temperature=0.7, max_tokens=150):
     response = client.chat.completions.create(
