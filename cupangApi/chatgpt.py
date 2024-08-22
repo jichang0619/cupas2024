@@ -21,7 +21,7 @@ def chat_with_gpt(prompt, model="gpt-4o", temperature=0.7, max_tokens=150):
     return response.choices[0].message.content
 
 
-prompt = "한국의 쿠팡쇼핑몰 물 2리터에 대한 글을 사진과 고객 후기등을 담아서 블로그 형식으로 써줘"
+prompt = "한국의 오이슬에 대해 알려줘"
 text = chat_with_gpt(prompt)
 
 
