@@ -5,7 +5,6 @@ import json
 from time import gmtime, strftime
 import os
 from dotenv import load_dotenv
-
 load_dotenv()
 
 # deeplink 파라미터 사용
