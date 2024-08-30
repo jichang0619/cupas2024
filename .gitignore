@@ -7,3 +7,6 @@
 
 # output images
 output/*/images
+
+# build files
+dist

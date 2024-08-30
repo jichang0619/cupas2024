@@ -30,12 +30,12 @@ class Result:
 result = Result()
 
 
-def chat_with_gpt(text, max_tokens=300):
+def chat_with_gpt(text, max_tokens=300, system_role='You are a helpful assistant.'):
     print('chatGPT api requested..')
     response = client.chat.completions.create(
-        model="gpt-4",
+        model="gpt-4o",
         messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "system", "content": system_role},
             {"role": "user", "content": f"모든 답변은 한국어로 해줘.\n\n {text}"}
         ],
         max_tokens=max_tokens,
@@ -107,7 +107,7 @@ def save_result_to_json(result, folder_path):
     with open(result_file_path, 'w', encoding='utf-8') as f:
         json.dump(result.__dict__, f, ensure_ascii=False, indent=4)
 
-    print(f"----- \n저장 완료: {result_file_path} \n상품명: {result.title}\n-----")
+    print(f"----- \n저장 위치 : {result_file_path} \n상품명: {result.title}\n-----")
 
 
 def save_blog_post_to_txt(blog_post, folder_path):
@@ -187,7 +187,7 @@ def main(target_url, max_retries=3):
 
         # 블로그 글 작성
         blog_post = chat_with_gpt(
-            f"아래 상품명과 내용을 참고해서 상품을 홍보하는 블로그 글을 16줄 이상으로 작성해줘. \n\n상품명 : {result.title} \n\n내용 :{result.description}", 1000)
+            f"아래 상품명과 내용을 참고해서 상품을 홍보하는 블로그 글을 16줄 이상으로 작성해줘. 제일 처음에는 상품명이 포함된 제목을 작성하고, 각 문단에 문단 내용에 맞는 소제목을 달아줘. \n\n상품명 : {result.title} \n\n내용 :{result.description}", 1000, '너는 제품을 홍보하는 블로거야.')
         save_blog_post_to_txt(blog_post, output_folder_path)  # 블로그 글을 텍스트 파일로 저장
         break
 
