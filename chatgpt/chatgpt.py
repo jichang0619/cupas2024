@@ -19,7 +19,7 @@ load_dotenv()
 API_KEY = os.getenv('API_KEY')
 
 client = OpenAI(api_key=API_KEY)
-target_url = "https://www.coupang.com/vp/products/7645678276"
+target_url = "https://www.coupang.com/vp/products/6758436671"
 
 
 class Result:
@@ -31,6 +31,7 @@ result = Result()
 
 
 def chat_with_gpt(text, max_tokens=300):
+    print('chatGPT api requested..')
     response = client.chat.completions.create(
         model="gpt-4",
         messages=[
@@ -46,7 +47,7 @@ def chat_with_gpt(text, max_tokens=300):
 
 
 def summarize_text(text):
-    result_text = chat_with_gpt(f"아래 내용을 요약하는데, 내용 파악이나 요약이 어려운 경우는 반드시 '요약 불가' 라고 대답해. \n\n {text}")
+    result_text = chat_with_gpt(f"아래 내용을 요약하는데, 줄바꿈 두 개로 구분된 각 문단이 별개의 내용이고, 내용 파악이나 요약이 어려운 문단의 경우는 요약하지 말고 넘어가. \n\n {text}")
     return result_text
 
 
@@ -153,37 +154,40 @@ def main(target_url, max_retries=3):
         # 아웃풋 폴더 생성 (이미지 저장 폴더 포함)
         output_folder_path, images_folder_path = create_output_folder()
 
-        # 이미지 파일 저장 및 요약
+        # 이미지 파일 저장 및 텍스트 추출
+        all_extracted_texts = []
         if product_detail:
             try:
                 images = product_detail.find_elements(By.TAG_NAME, 'img')
-                print('-----\n이미지 요약 시작 (최대 10장)')
+                print('-----\n이미지 텍스트 추출 시작')
                 if images:
                     for i, img in enumerate(images):
-                        if i > 9:  # 이미지 최대 10개 까지만
-                            break
                         img_url = img.get_attribute('src')
                         img_path = os.path.join(images_folder_path, f'image_{i + 1}.png')
                         saved_img = save_image_from_url(img_url, img_path)
                         extracted_text = extract_text_from_image(img_path)
-                        img_summary = summarize_text(extracted_text)
-                        print(f'이미지 {i + 1} / {len(images)} 내용 요약 : {img_summary}')
-
-                        if extracted_text and img_summary and "요약 불가" not in img_summary:
-                            result.description += img_summary + ". "
+                        if extracted_text:
+                            all_extracted_texts.append(extracted_text)
                 else:
                     print("'#productDetail'에서 이미지가 발견되지 않음.")
             except Exception as e:
-                print(f"Error :: 이미지 요약: {e}")
+                print(f"Error :: 이미지 텍스트 추출: {e}")
 
         driver.quit()
+
+        # 한 번의 요청으로 모든 이미지의 텍스트 요약
+        if all_extracted_texts:
+            print(f'all_extracted_texts : {all_extracted_texts}')
+            combined_text = "\n\n".join(all_extracted_texts)
+            img_summaries = summarize_text(combined_text)
+            result.description += img_summaries + ". "
 
         # 결과를 JSON 파일로 저장
         save_result_to_json(result, output_folder_path)
 
-        # 블로그 내용 TXT 파일로 저장
+        # 블로그 글 작성
         blog_post = chat_with_gpt(
-            f"아래 상품명과 내용을 참고해서 상품을 홍보하는 블로그 글을 작성해줘. \n\n상품명 : {result.title} \n\n내용 :{result.description}", 1000)
+            f"아래 상품명과 내용을 참고해서 상품을 홍보하는 블로그 글을 16줄 이상으로 작성해줘. \n\n상품명 : {result.title} \n\n내용 :{result.description}", 1000)
         save_blog_post_to_txt(blog_post, output_folder_path)  # 블로그 글을 텍스트 파일로 저장
         break
 
