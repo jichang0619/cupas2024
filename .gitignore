@@ -4,3 +4,6 @@
 
 # env
 .env
+
+# output images
+output/*/images

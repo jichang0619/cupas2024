@@ -58,6 +58,12 @@ urllib3 = "2.2.2"
 virtualenv = "20.26.3"
 xattr = "1.1.0"
 beautifulsoup4 = "^4.12.3"
+pillow = "^10.4.0"
+pytesseract = "^0.3.13"
+selenium = "^4.24.0"
+webdriver-manager = "^4.0.2"
+cv = "^1.0.0"
+opencv-python = "^4.10.0.84"
 
 
 [build-system]
