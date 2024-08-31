@@ -26,6 +26,7 @@ class Result:
     def __init__(self):
         self.title = ''
         self.description = ''
+        self.category = ''
 
 result = Result()
 
@@ -44,6 +45,16 @@ def chat_with_gpt(text, max_tokens=300, system_role='You are a helpful assistant
         temperature=0.5,
     )
     return response.choices[0].message.content
+
+
+def create_image(text):
+    response = client.images.generate(
+        model="dall-e-3",
+        prompt=text,
+        n=1,
+        size="1024x1024"
+    )
+    return response.data
 
 
 def summarize_text(text):
@@ -107,7 +118,7 @@ def save_result_to_json(result, folder_path):
     with open(result_file_path, 'w', encoding='utf-8') as f:
         json.dump(result.__dict__, f, ensure_ascii=False, indent=4)
 
-    print(f"----- \n저장 위치 : {result_file_path} \n상품명: {result.title}\n-----")
+    print(f"----- \n저장 위치 : {result_file_path} \n상품명: {result.title}\n카테고리: {result.category}\n-----")
 
 
 def save_blog_post_to_txt(blog_post, folder_path):
@@ -116,6 +127,17 @@ def save_blog_post_to_txt(blog_post, folder_path):
         f.write(blog_post)
 
     print(f"블로그 글 저장 완료: {blog_post_file_path}")
+
+
+def save_image(image_data, save_path):
+    if not save_path.lower().endswith(('.png', '.jpg', '.jpeg')):
+        save_path += "/thumbnail.jpg"
+
+    image_url = image_data[0].url
+    image_response = requests.get(image_url)
+    img = Image.open(BytesIO(image_response.content))
+    img.save(save_path)
+    print(f"대표 이미지 저장 완료: {save_path}")
 
 
 def main(target_url, max_retries=3):
@@ -133,8 +155,16 @@ def main(target_url, max_retries=3):
             product_name = product_name_element.text
             result.title = product_name
             print('-----\n상품명 추출 완료')
+
+            category_element = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "#breadcrumb"))
+            )
+            category_text = category_element.text.replace('\n', ' > ')
+            result.category = category_text
+            print(f'카테고리 추출 완료: {result.category}')
+
         except Exception as e:
-            print(f"Error :: finding product name : {e}")
+            print(f"Error :: finding product name or category: {e}")
             driver.quit()
             return
 
@@ -153,6 +183,11 @@ def main(target_url, max_retries=3):
 
         # 아웃풋 폴더 생성 (이미지 저장 폴더 포함)
         output_folder_path, images_folder_path = create_output_folder()
+
+        # 대표 이미지 생성
+        image_prompt = f'아래 내용에 대한 블로그용 썸네일 이미지를 만들어줘. \n\n상품명: {result.title}\n카테고리: {result.category}'
+        image_data = create_image(image_prompt)
+        save_image(image_data, images_folder_path)
 
         # 이미지 파일 저장 및 텍스트 추출
         all_extracted_texts = []
@@ -187,7 +222,7 @@ def main(target_url, max_retries=3):
 
         # 블로그 글 작성
         blog_post = chat_with_gpt(
-            f"아래 상품명과 내용을 참고해서 상품을 홍보하는 블로그 글을 16줄 이상으로 작성해줘. 제일 처음에는 상품명이 포함된 제목을 작성하고, 각 문단에 문단 내용에 맞는 소제목을 달아줘. \n\n상품명 : {result.title} \n\n내용 :{result.description}", 1000, '너는 제품을 홍보하는 블로거야.')
+            f"아래 상품명과 내용을 참고해서 상품을 홍보하는 블로그 글을 16줄 이상으로 작성해줘. 제일 처음에는 상품명이 포함된 제목을 작성하고, 각 문단에 문단 내용에 맞는 소제목을 달아줘. \n\n상품명 : {result.title} \n\n내용 :{result.description}\n\n카테고리: {result.category}", 1000, '너는 제품을 홍보하는 블로거야.')
         save_blog_post_to_txt(blog_post, output_folder_path)  # 블로그 글을 텍스트 파일로 저장
         break
 
