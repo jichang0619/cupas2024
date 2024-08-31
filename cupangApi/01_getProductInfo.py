@@ -11,6 +11,8 @@ from datetime import datetime, timedelta
 # env 
 load_dotenv()
 
+# output 으로 id랑(폴더명), shorten url 넘겨주면 됨
+
 SECRET_KEY = os.getenv('SECRET_KEY')
 ACCESS_KEY = os.getenv('ACCESS_KEY')
 PARTNER_ID = "YOUR_PARTNER_ID"
@@ -126,42 +128,43 @@ categories = {
     1030: '유아동패션'
 }
 
-# 모든 카테고리에 대해 반복
-for key, value in categories.items():
-    coupang_category_id = key
 
-    REQUEST_METHOD = "GET"
-    DOMAIN = "https://api-gateway.coupang.com"
-    URL = "/v2/providers/affiliate_open_api/apis/openapi/v1/products/bestcategories/" + str(coupang_category_id) + '?limit=' + str(coupang_item_limit) + '&subId=' + PARTNER_ID
 
-    # HMAC 서명 생성
-    authorization = generateHmac(REQUEST_METHOD, URL, SECRET_KEY, ACCESS_KEY)
-    url = "{}{}".format(DOMAIN, URL)
-    response = requests.request(method=REQUEST_METHOD, url=url,
-                                headers={
-                                    "Authorization": authorization,
-                                    "Content-Type": "application/json"
-                                }
-                            )
+coupang_category_id = 1001
 
-    # API 응답 데이터 파싱
-    data = response.json()
+REQUEST_METHOD = "GET"
+DOMAIN = "https://api-gateway.coupang.com"
+URL = "/v2/providers/affiliate_open_api/apis/openapi/v1/products/bestcategories/" + str(coupang_category_id) + '?limit=' + str(coupang_item_limit) + '&subId=' + PARTNER_ID
 
-    # 상품 정보 출력
-    for item in data['data']:
-        productId = item['productId']
-        productName = item['productName']
-        productPrice = item['productPrice']
-        productImage = item['productImage']
-        productUrl = item['productUrl']
-        
+# HMAC 서명 생성
+authorization = generateHmac(REQUEST_METHOD, URL, SECRET_KEY, ACCESS_KEY)
+url = "{}{}".format(DOMAIN, URL)
+response = requests.request(method=REQUEST_METHOD, url=url,
+                            headers={
+                                "Authorization": authorization,
+                                "Content-Type": "application/json"
+                            }
+                        )
+
+# API 응답 데이터 파싱
+data = response.json()
+
+# 상품 정보 출력
+for item in data['data']:
+    productId = item['productId']
+    productName = item['productName']
+    productPrice = item['productPrice']
+    productImage = item['productImage']
+    productUrl = item['productUrl']
     
-    shortenURL = cupangURLChanger(productUrl)    
-    string_data = "Id: {}, Product Name: {}, Product Price : {}, ProductImage URL: {}, Product URL : {}, Shorten URL : {}".format(productId, productName, productPrice, productImage, productUrl, shortenURL)
-    folder_path = "cupas2024\Output"
-    file_name = "All Product Info"
-    save_ProductInfo(string_data, folder_path, file_name)
+
+shortenURL = cupangURLChanger(productUrl)    
+string_data = "Id: {}, Product Name: {}, Product Price : {}, ProductImage URL: {}, Product URL : {}, Shorten URL : {}".format(productId, productName, productPrice, productImage, productUrl, shortenURL)
+folder_path = "cupas2024\Output"
+file_name = "All Product Info"
+save_ProductInfo(string_data, folder_path, file_name)
+
+
     
-    # 폴더 생성은 ID 로 
 
 
