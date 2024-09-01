@@ -32,20 +32,37 @@ def main():
     """
     Main functions.
     """
-
-    # CASE 1 : Category 별 Best 상품, 갯수
-    category_id = categories[0]
-    item_num = 1
+    case = 2
+    case1_choose_num = 1
+    case2_choose_num = 1
+    case1_lim = 100
+    case2_lim = 10
     
-    # Product ID 가 겹치는지 확인 후 저장
-    bValid, product_url = getProductInfo.get_best_product_url(category_id, item_num)
+    # CASE 1 : Category 별 Best 상품, Limit : 최대 상품 수는 100개 이며, 기본값은 20개 
+    # case1_lim 개 의 Data 중 case1_choose_num 번째 상품의 Valid, URL 출력
+    if (case == 1):
+        category_id = categories[0]
+        # Product ID 가 겹치는지 확인 후 저장
+        bValid, product_url = getProductInfo.get_best_product_url(category_id, case1_lim, case1_choose_num)
+    
+    # CASE 2 : SEARCH 별 상품, 갯수 Limit : 최대 상품 수는 10개 이며, 기본값은 10개
+    # case2_lim 개 의 Data 중 case2_choose_num 번째 상품의 Valid, URL 출력
+    elif (case == 2):
+        keyword = 'food'
+        bValid, product_url = getProductInfo.get_search_product_url(keyword, case2_lim, case2_choose_num)
+    
+    else :
+        bValid, product_url = False, ''
+    
     time.sleep(1.0)
     
+   
     # Change Url To Shorten URL
     if (bValid == True):
         ShortenURL = getShortenUrl.ChangeShortenUrl(product_url)
     else:
         ShortenURL = ''
+    
     
     time.sleep(1.0)
     ## ChatGPT 이용하여 TEXT, 이미지 생성 코드 call 
