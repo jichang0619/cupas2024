@@ -1,6 +1,17 @@
-
 # Project files
 .idea
 
 # env
 .env
+
+
+############ 블로그 업로드 및 VEDDIO MAKING PROCESS ############
+
+# 1. /output/0_{상품 Number} 의 블로그 형식 TEXT, 사진 이용
+# 2. BLOG 업로드
+# 3. https://gamma.app/ 에서 TEXT, 사진 -> PDF 파일로 추출
+# 4. Vrew 에서 PDF -> 영상으로 변환 (+목소리 AI)
+# 5. 유튜브 업로드 + 쿠팡 링크 + 문구
+# 6. 업로드 완료시 해당 폴더에 complete.txt 파일 생성 필요
+
+##############################################################
