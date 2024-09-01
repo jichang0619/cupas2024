@@ -6,7 +6,7 @@
 # ================================================================================
 #                   Project: CUPANG PARTNER PROJ
 #                   Created by: Y.S. Oh, J.C. Kim
-#                   Date: 2024-09-091
+#                   Date: 2024-09-01
 #                   Description: This is a project for automating Coupang Partners
 # ================================================================================
 
