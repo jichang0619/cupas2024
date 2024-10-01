@@ -53,7 +53,7 @@ def main(url, max_retries=3):
 
             # 블로그 글 작성 및 저장
             blog_post = chat_with_gpt(
-                f"아래 상품명과 내용을 참고해서 상품을 홍보하는 블로그 글을 16줄 이상으로 작성해줘. 제일 처음에는 상품명이 포함된 제목을 작성하고, 각 문단에 문단 내용에 맞는 소제목을 달아줘. \n\n상품명 : {result.title} \n\n내용 :{result.description}\n\n카테고리: {result.category}",
+                f"아래 상품명과 내용을 참고해서 상품을 홍보하는 블로그 글을 16줄 이상으로 작성해줘. 제일 처음에는 상품명이 포함된 제목을 작성하고, 내용의 맨 처음에 {url} 을 표시해줘 , 각 문단에 문단 내용에 맞는 소제목을 달아줘. 소제목 : 이라고 쓰지말고 Bold 처리 해줘, 그리고 맨 마지막엔 이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다. 라고 한 문장 써줘 \n\n상품명 : {result.title} \n\n내용 :{result.description}\n\n카테고리: {result.category}",
                 1000, '너는 제품을 홍보하는 블로거야.')
             save_blog_post_to_txt(blog_post, output_folder)
 
