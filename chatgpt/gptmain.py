@@ -1,13 +1,10 @@
-from openai_client import chat_with_gpt, create_image
-from crawler import fetch_product_data
-from utils import save_image, save_image_from_url, extract_text_from_image, create_output_folder, save_result_to_json, save_blog_post_to_txt
+from chatgpt.openai_client import chat_with_gpt, create_image
+from chatgpt.crawler import fetch_product_data
+from chatgpt.utils import save_image, save_image_from_url, extract_text_from_image, create_output_folder, save_result_to_json, save_blog_post_to_txt
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 import time
-
-
-target_url = "https://www.coupang.com/vp/products/6758436671"
 
 def setup_driver():
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
@@ -75,4 +72,4 @@ def main(url, max_retries=3):
         print("최대 재시도 횟수를 초과하여 실패했습니다.")
 
 if __name__ == "__main__":
-    main(target_url)
+    main()

@@ -1,89 +1,28 @@
 import os
 import requests
 import json
-from common import generateHmac
+from cupangApi.common import generateHmac 
 from dotenv import load_dotenv
+import random
+from datetime import datetime
 
 # env 
 load_dotenv()
 
-def is_id_unique(new_id, json_file_path):
-    """
-    Check if the generated ID is unique within the given JSON file.
+# JSON 파일 경로
+JSON_FILE_PATH = "coupang_products.json"
 
-    :param new_id: The ID to check for uniqueness.
-    :param json_file_path: Path to the JSON file.
-    :return: True if the ID is unique, False otherwise.
-    """
-    if not os.path.exists(json_file_path):
-        print("JSON file does not exist.")
-        return False
-
-    with open(json_file_path, 'r') as file:
-        data = json.load(file)
-
-    # Assume that the JSON data is a list of dictionaries with an 'id' key.
-    for entry in data:
-        if entry.get('id') == new_id:
-            return False
-
-    return True
-
-# 전체 상품 정보 저장
-def save_productinfo_as_json(string_data, folder_path):
-    # 폴더가 존재하지 않으면 생성
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
-
-    # 파일 경로 설정
-    file_path = os.path.join(folder_path, f"productInfo.json")
-    
-    # 파일이 존재하면 기존 데이터를 읽어오고, 존재하지 않으면 빈 리스트로 시작
-    if os.path.exists(file_path):
-        with open(file_path, 'r', encoding='utf-8') as json_file:
-            try:
-                existing_data = json.load(json_file)  # 기존 데이터 읽기
-            except json.JSONDecodeError:
-                existing_data = []  # 파일이 비었거나 JSON이 잘못된 경우 빈 리스트로 설정
-    else:
-        existing_data = []  # 파일이 없으면 빈 리스트
-
-    # 문자열을 JSON 형식으로 변환
-    new_data = json.loads(string_data)
-    
-    # 기존 데이터가 리스트 형태인 경우 새 데이터를 추가
-    if isinstance(existing_data, list):
-        existing_data.append(new_data)
-    else:
-        # 기존 데이터가 리스트가 아니면, 리스트로 변환해서 새 데이터를 추가
-        existing_data = [existing_data, new_data]
-
-    # 수정된 데이터를 다시 파일에 저장 (덮어쓰기)
-    with open(file_path, 'w', encoding='utf-8') as json_file:
-        json.dump(existing_data, json_file, ensure_ascii=False, indent=4)
-
-    print(f"새로운 데이터가 추가되었습니다: {file_path}")
-    
-    
-def get_best_product_url (coupang_category_id, lim, choose_num):
-    
-    # 현재 파일의 디렉토리 위치를 가져옴
-    file_name = "productInfo.json"
-    current_directory = os.path.dirname(os.path.abspath(__file__))
-    parent_directory = os.path.dirname(current_directory)
-    output_directory = os.path.join(parent_directory, 'output')
-    json_file_path = os.path.join(output_directory, file_name)
-    
-    SECRET_KEY = os.getenv('SECRET_KEY')
-    ACCESS_KEY = os.getenv('ACCESS_KEY')
-    PARTNER_ID = "YOUR_PARTNER_ID"
+def fetch_product(category_id):
+    SECRET_KEY = os.getenv('CP_SECRET_KEY')
+    ACCESS_KEY = os.getenv('CP_ACCESS_KEY')
+    PARTNER_ID = os.getenv('PARTNER_ID')
     REQUEST_METHOD = "GET"
     DOMAIN = "https://api-gateway.coupang.com"
-    URL = "/v2/providers/affiliate_open_api/apis/openapi/products/bestcategories/" + str(coupang_category_id) + '?limit=' + str(lim) + '&subId=' + PARTNER_ID
+    URL = f"/v2/providers/affiliate_open_api/apis/openapi/products/bestcategories/{category_id}?limit=20&subId={PARTNER_ID}"
     
     # HMAC 서명 생성
     authorization = generateHmac(REQUEST_METHOD, URL, SECRET_KEY, ACCESS_KEY)
-    url = "{}{}".format(DOMAIN, URL)
+    url = f"{DOMAIN}{URL}"
     response = requests.request(method=REQUEST_METHOD, url=url,
                                 headers={
                                     "Authorization": authorization,
@@ -91,81 +30,55 @@ def get_best_product_url (coupang_category_id, lim, choose_num):
                                 }
                             )
 
-    # API 응답 데이터 파싱
-    data_raw = response.json()
-    data = data_raw[choose_num - 1]
+    if response.status_code == 200:
+        data = response.json()
+        if data['rCode'] == '0' and len(data['data']) > 0:
+            return data['data']
+    
+    return None
 
-    # 상품 정보 출력
-    for item in data['data']:
-        productId = item['productId']
-        productName = item['productName']
-        productPrice = item['productPrice']
-        productImage = item['productImage']
-        productUrl = item['productUrl']
+def save_to_json(product):
+    if os.path.exists(JSON_FILE_PATH):
+        with open(JSON_FILE_PATH, 'r', encoding='utf-8') as file:
+            products = json.load(file)
+    else:
+        products = []
+    
+    # 중복 체크
+    if not any(item['productId'] == product['productId'] for item in products):
+        products.append({
+            "productId": product['productId'],
+            "productName": product['productName'],
+            "productPrice": product['productPrice'],
+            "productImage": product['productImage'],
+            "productUrl": product['productUrl'],
+            "fetchDate": datetime.now().isoformat()
+        })
         
-    # JSON 파일의 ID 항목 중 중복되는 것이 없으면 TRUE
-    bValid = is_id_unique (productId, json_file_path)
-    
-    if bValid == True :
-        string_data = "Id: {}, Product Name: {}, Product Price : {}, ProductImage URL: {}, Product URL : {}".format(productId, productName, productPrice, productImage, productUrl)
+        with open(JSON_FILE_PATH, 'w', encoding='utf-8') as file:
+            json.dump(products, file, ensure_ascii=False, indent=2)
         
-        save_productinfo_as_json(string_data, output_directory, file_name)
-    
-    return bValid, productUrl
+        return True
+    return False
 
-def get_search_product_url (keyword, lim, choose_num):
+def get_product_info(category_id):
+    products = fetch_product(category_id)
     
-    # 현재 파일의 디렉토리 위치를 가져옴
-    file_name = "productInfo.json"
-    current_directory = os.path.dirname(os.path.abspath(__file__))
-    parent_directory = os.path.dirname(current_directory)
-    output_directory = os.path.join(parent_directory, 'output')
-    json_file_path = os.path.join(output_directory, file_name)
-    
-    SECRET_KEY = os.getenv('SECRET_KEY')
-    ACCESS_KEY = os.getenv('ACCESS_KEY')
-    PARTNER_ID = "YOUR_PARTNER_ID"
-    REQUEST_METHOD = "GET"
-    DOMAIN = "https://api-gateway.coupang.com"
-    URL = "/v2/providers/affiliate_open_api/apis/openapi/products/search?keyword=" + str(keyword) + '?limit=' + str(lim) + '&subId=' + PARTNER_ID
-    
-    # HMAC 서명 생성
-    authorization = generateHmac(REQUEST_METHOD, URL, SECRET_KEY, ACCESS_KEY)
-    url = "{}{}".format(DOMAIN, URL)
-    response = requests.request(method=REQUEST_METHOD, url=url,
-                                headers={
-                                    "Authorization": authorization,
-                                    "Content-Type": "application/json"
-                                }
-                            )
-
-    # API 응답 데이터 파싱
-    data_raw = response.json()
-    data = data_raw[choose_num - 1]
-
-    # 상품 정보 출력
-    for item in data['data']:
-        productId = item['productId']
-        productName = item['productName']
-        productPrice = item['productPrice']
-        productImage = item['productImage']
-        productUrl = item['productUrl']
+    if products:
+        random.shuffle(products)
+        for product in products:
+            if save_to_json(product):
+                return product['productId'], product['productUrl'], product['productImage']
         
-    # JSON 파일의 ID 항목 중 중복되는 것이 없으면 TRUE
-    bValid = is_id_unique (productId, json_file_path)
+        print("모든 상품이 이미 존재합니다. 다른 카테고리를 선택해 주세요.")
+    else:
+        print("상품을 가져오는데 실패했습니다.")
     
-    if bValid == True :
-        string_data = "Id: {}, Product Name: {}, Product Price : {}, ProductImage URL: {}, Product URL : {}".format(productId, productName, productPrice, productImage, productUrl)
-        
-        save_productinfo_as_json(string_data, output_directory, file_name)
-    
-    return bValid, productUrl
+    return None, None
 
-    
-
-
-
-
-    
-
-
+if __name__ == "__main__":
+    category_id = input("카테고리 ID를 입력하세요: ")
+    id, url, image = get_product_info(category_id)
+    if url and image:
+        print(f"상품 URL: {url}")
+        print(f"상품 이미지: {image}")
