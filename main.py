@@ -34,7 +34,7 @@ categories = {
     1020: '완구/취미',
     1021: '문구/오피스',
     1024: '헬스/건강식품',
-    1025: '국내여행',
+    1025: '국내여행', # 안되는듯
     1026: '해외여행', # 안되는듯
     1029: '반려동물용품',
     1030: '유아동패션'
@@ -55,9 +55,9 @@ def main():
         modiURL = f"https://www.coupang.com/vp/products/{id}"
         ShortenURL = ChangeShortenUrl(modiURL)
         print(ShortenURL)
-        
+
         print("크롤링 및 블로그 포스트 생성을 시작합니다...")
-        chatgpt_main(ShortenURL)
+        chatgpt_main(ShortenURL, image)
     else:
         print("상품 정보를 가져오는데 실패했습니다.")
     

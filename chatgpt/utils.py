@@ -69,13 +69,22 @@ def save_blog_post_to_txt(blog_post, folder_path):
     print(f"블로그 글 저장 위치: {blog_post_file_path}")
 
 
-def save_image(image_data, save_path):
+def save_image(image_data, save_path, file_name):
     if not save_path.lower().endswith(('.png', '.jpg', '.jpeg')):
-        save_path += "/thumbnail.jpg"
+        save_path += f'/{file_name}.jpg'
 
     image_url = image_data[0].url
     image_response = requests.get(image_url)
     img = Image.open(BytesIO(image_response.content))
     img.save(save_path)
 
-    print(f"대표 이미지 저장 위치: {save_path}")
+    print(f"이미지 저장 위치: {save_path}")
+
+def download_hero_image(img_url, save_path):
+    response = requests.get(img_url)
+    if response.status_code == 200:
+        with open(f'{save_path}/hero.jpg', 'wb') as file:
+            file.write(response.content)
+        print(f"쿠팡 대표 이미지 저장 완료: {save_path}")
+    else:
+        print(f"쿠팡 대표 이미지 다운로드 실패: {img_url}")

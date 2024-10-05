@@ -1,6 +1,6 @@
 from chatgpt.openai_client import chat_with_gpt, create_image
 from chatgpt.crawler import fetch_product_data
-from chatgpt.utils import save_image, save_image_from_url, extract_text_from_image, create_output_folder, save_result_to_json, save_blog_post_to_txt
+from chatgpt.utils import save_image, download_hero_image, save_image_from_url, extract_text_from_image, create_output_folder, save_result_to_json, save_blog_post_to_txt
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
@@ -10,7 +10,7 @@ def setup_driver():
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
     return driver
 
-def main(url, max_retries=3):
+def main(url, image=None, max_retries=3):
     retries = 0
     driver = None
 
@@ -28,10 +28,14 @@ def main(url, max_retries=3):
             # 출력 폴더 생성
             output_folder, images_folder = create_output_folder()
 
-            # 대표 이미지 생성 및 저장
+            # 쿠팡 대표 이미지 저장
+            if image:
+                download_hero_image(image, images_folder)
+
+            # 썸네일 이미지 생성 및 저장
             image_prompt = f"상품명: {result.title}, 카테고리: {result.category}에 맞는 블로그용 썸네일 이미지를 생성해줘."
             image_data = create_image(image_prompt)
-            save_image(image_data, images_folder)
+            save_image(image_data, images_folder, 'thumbnail')
 
             # 이미지 텍스트 추출
             all_extracted_texts = []
@@ -70,6 +74,3 @@ def main(url, max_retries=3):
 
     if retries >= max_retries:
         print("최대 재시도 횟수를 초과하여 실패했습니다.")
-
-if __name__ == "__main__":
-    main()
