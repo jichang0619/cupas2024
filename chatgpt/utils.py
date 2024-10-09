@@ -61,12 +61,12 @@ def save_result_to_json(result, folder_path):
     print(f"----- \n저장 위치 : {result_file_path} \n상품명: {result.title}\n카테고리: {result.category}")
 
 
-def save_blog_post_to_txt(blog_post, folder_path):
-    blog_post_file_path = os.path.join(folder_path, 'blog_post.txt')
-    with open(blog_post_file_path, 'w', encoding='utf-8') as f:
-        f.write(blog_post)
+def save_txt(contents, folder_path, file_name='file_name'):
+    file_path = os.path.join(folder_path, f'{file_name}.txt')
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.write(contents)
 
-    print(f"블로그 글 저장 위치: {blog_post_file_path}")
+    print(f"텍스트 파일 {file_name} 저장 위치: {file_path}")
 
 
 def save_image(image_data, save_path, file_name):

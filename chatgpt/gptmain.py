@@ -1,6 +1,6 @@
 from chatgpt.openai_client import chat_with_gpt, create_image
 from chatgpt.crawler import fetch_product_data
-from chatgpt.utils import save_image, download_hero_image, save_image_from_url, extract_text_from_image, create_output_folder, save_result_to_json, save_blog_post_to_txt
+from chatgpt.utils import save_image, download_hero_image, save_image_from_url, extract_text_from_image, create_output_folder, save_result_to_json, save_txt
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
@@ -57,9 +57,14 @@ def main(url, image=None, max_retries=3):
 
             # 블로그 글 작성 및 저장
             blog_post = chat_with_gpt(
-                f"아래 상품명과 내용을 참고해서 상품을 홍보하는 블로그 글을 16줄 이상으로 작성해줘. 제일 처음에는 상품명이 포함된 제목을 작성하고, 내용의 맨 처음에 {url} 을 표시해줘 , 각 문단에 문단 내용에 맞는 소제목을 달아줘. 소제목 : 이라고 쓰지말고 Bold 처리 해줘, 그리고 맨 마지막엔 이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다. 라고 한 문장 써줘 \n\n상품명 : {result.title} \n\n내용 :{result.description}\n\n카테고리: {result.category}",
+                f"아래 상품명과 내용을 참고해서 상품을 홍보하는 블로그 글을 16줄 이상으로 작성해줘. 제일 처음에는 상품명이 포함된 제목을 작성하고, 내용의 맨 처음에 {url} 을 표시해줘 , 각 문단에 문단 내용에 맞는 소제목을 달아줘. 소제목 : 이라고 쓰지말고 Bold 처리 해줘, 그리고 마지막엔 '이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.' 라고 한 문장 써줘. 그리고 다음 문장으로 관련된 간결한 키워드 5개도 '키워드:\n키워드1\n키워드2\n키워드3\n키워드4\n키워드5' 형식으로 적어줘. 8192토큰을 넘지 않게 답변해주고, 넘으면 뒷 내용은 잘라도 돼. \n\n상품명 : {result.title} \n\n내용 :{result.description}\n\n카테고리: {result.category}",
                 1000, '너는 제품을 홍보하는 블로거야.')
-            save_blog_post_to_txt(blog_post, output_folder)
+            save_txt(blog_post, output_folder, 'blog_post')
+            # 영상 대본 작성 및 저장
+            video_script = chat_with_gpt(
+                f"아래는 상품에 대한 블로그 홍보 글이고, 이 내용을 토대로 홍보 영상을 만드려고 해. 조건에 맞춰서 영상의 나레이션으로 적절한 내용을 작성해줘. \n\n조건 : \n1. 나레이션 내용에 해당하는 내용만 포함한다 \n2. 영상 전환 효과나 영상 시작 또는 끝을 나타내는 글자를 포함하지 않는다 \n\n\n블로그 글 :{blog_post}",
+                1000, '너는 제품 홍보 영상을 만드는 마케터야.')
+            save_txt(video_script, output_folder, 'video_script')
 
             break
 
