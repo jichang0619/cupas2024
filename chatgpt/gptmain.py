@@ -4,7 +4,9 @@ from chatgpt.utils import save_image, download_hero_image, save_image_from_url, 
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
+import shutil
 import time
+import os
 
 def setup_driver():
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
@@ -13,6 +15,7 @@ def setup_driver():
 def main(url, image=None, max_retries=3):
     retries = 0
     driver = None
+    output_folder = None
 
     while retries < max_retries:
         try:
@@ -73,9 +76,19 @@ def main(url, image=None, max_retries=3):
             print(f"오류 발생: {e}. 재시도 중... ({retries}/{max_retries})")
             time.sleep(5)
 
+            # 실패 시 생성된 output 폴더 삭제
+            if output_folder and os.path.exists(output_folder):
+                print(f"실패로 인해 생성된 폴더를 삭제합니다: {output_folder}")
+                shutil.rmtree(output_folder)
+
         finally:
             if driver:
                 driver.quit()
 
     if retries >= max_retries:
         print("최대 재시도 횟수를 초과하여 실패했습니다.")
+
+        # 마지막 시도에서 폴더가 생성되었다면 삭제
+        if output_folder and os.path.exists(output_folder):
+            print(f"최종 실패로 인해 폴더를 삭제합니다: {output_folder}")
+            shutil.rmtree(output_folder)
